@@ -1,8 +1,7 @@
 import { formatCurrency } from "@/app/lib/utils";
 import { unstable_noStore as noStore } from 'next/cache';
 import prisma from '../../../prisma/client';
-import { invoices } from "@prisma/client";
-import { InvoiceForm } from "@/app/lib/definitions";
+import { InvoiceForm } from "@/app/types/definitions";
 
 export async function fetchLatestInvoices() {
     noStore();

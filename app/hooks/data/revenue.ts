@@ -1,6 +1,6 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import prisma from '../../../prisma/client';
-import { Revenue } from '@/app/lib/definitions';
+import { Revenue } from '@/app/types/definitions';
 
 export async function fetchRevenue() {
     // Add noStore() here to prevent the response from being cached.
