@@ -1,11 +1,9 @@
 'use server';
 
 import { z } from 'zod';
-import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { signIn } from '@/auth';
-import { AuthError } from 'next-auth';
+import prisma from '../../../prisma/client';
 
 export type State = {
     errors?: {
@@ -52,9 +50,14 @@ export async function createInvoice(prevState: State, formData: FormData) {
     const date = new Date().toISOString().split('T')[0];
     // database 오류 처리
     try {
-        await sql`
-            INSERT INTO invoices (customer_id, amount, status, date)
-            VALUES (${customerId}, ${amoutInCents}, ${status}, ${date})`;
+        const invoice = await prisma.invoices.create({
+            data: {
+                customer_id: customerId,
+                amount: amoutInCents,
+                status,
+                date,
+            }
+        });
     } catch (error) {
         return {
             message: 'Database Error: Faild to Create Invoice.'
@@ -66,7 +69,6 @@ export async function createInvoice(prevState: State, formData: FormData) {
 }
 
 export async function updateInvoice(id: string, prevState: State, formData: FormData) {
-    console.log('updateInvoice');
     const validatedFields = UpdateInvoice.safeParse({
         customerId: formData.get('customerId'),
         amount: formData.get('amount'),
@@ -84,10 +86,16 @@ export async function updateInvoice(id: string, prevState: State, formData: Form
 
     const amoutInCents = amount * 100;
     try {
-        await sql`
-            UPDATE invoices
-            SET customer_id = ${customerId}, amount = ${amoutInCents}, status = ${status}
-            WHERE id = ${id}`;
+        const updateInvoice = await prisma.invoices.update({
+            where: {
+                id: id
+            },
+            data: {
+                customer_id: customerId,
+                amount: amoutInCents,
+                status,
+            }
+        });
     } catch (error) {
         return {
             message: 'Database Error: Faild to Update Invoice.'
@@ -100,31 +108,16 @@ export async function updateInvoice(id: string, prevState: State, formData: Form
 
 export async function deleteInvoice(id: string) {
     try {
-        await sql`DELETE FROM invoices WHERE id = ${id}`;
+        const deleteInvoice = await prisma.invoices.delete({
+            where: {
+                id: id
+            }
+        });
         revalidatePath('/dashboard/invoices');
         return { message: 'Deleted Invoice.' };
     } catch (error) {
         return {
             message: 'Database Error: Faild to Delete Invoice.'
         }
-    }
-}
-
-export async function authenticate(
-    prevState: string | undefined,
-    formData: FormData,
-) {
-    try {
-        await signIn('credentials', formData);
-    } catch (error) {
-        if (error instanceof AuthError) {
-            switch (error.type) {
-                case 'CredentialsSignin':
-                    return 'Invalid Credentials.';
-                default:
-                    return 'Somthing went wrong.';
-            }
-        }
-        throw error;
     }
 }

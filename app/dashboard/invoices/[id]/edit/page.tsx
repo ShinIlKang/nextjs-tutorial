@@ -1,7 +1,8 @@
 import Form from '@/app/ui/invoices/edit-form';
 import Breadcrumbs from '@/app/ui/invoices/breadcrumbs';
-import { fetchInvoiceById, fetchCustomers } from '@/app/lib/data';
+import { fetchInvoiceById } from '@/app/hooks/data/invoices';
 import {notFound } from 'next/navigation'; 
+import { fetchCustomers } from '@/app/hooks/data/customer';
 
 export default async function Page({params} : {params: {id: string}}) {
     const id = params.id;
